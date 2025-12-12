@@ -1,32 +1,13 @@
 package com.example.sigo01
 
-
-
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,7 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,30 +22,20 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.sigo01.data.model.UserResponse
 import com.example.sigo01.di.LoginViewModelFactory
+import com.example.sigo01.ui.login.DetalleCuatrimestreScreen
+import com.example.sigo01.ui.login.HistorialScreen
 import com.example.sigo01.ui.login.LoginViewModel
+import com.example.sigo01.ui.login.PagosScreen
 import com.example.sigo01.ui.login.WelcomeScreen
 import com.google.gson.Gson
 
-/**
- * Define las rutas de navegación de la aplicación.
- */
 object Routes {
     const val LOGIN = "login_screen"
-    const val WELCOME = "welcome_screen/{userJson}" // Argumento para pasar el JSON
+    const val WELCOME = "welcome_screen/{userJson}"
 
-    /**
-     * Construye la ruta para la pantalla de bienvenida con el JSON del usuario.
-     * @param userJson El objeto [UserResponse] serializado como una cadena JSON.
-     * @return La ruta completa para navegar a la pantalla de bienvenida.
-     */
-    fun welcome(userJson: String): String {
-        return "welcome_screen/$userJson"
-    }
+    fun welcome(userJson: String): String = "welcome_screen/$userJson"
 }
 
-/**
- * Actividad principal de la aplicación.
- */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,55 +47,99 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Punto de entrada de la UI de la aplicación.
- *
- * Configura el [NavHost] y la inyección de dependencias para los ViewModels.
- */
 @Composable
 fun AppScreenEntry() {
+
     val appContext = LocalContext.current.applicationContext
     val application = appContext as SigoLoginApplication
     val authRepository = application.container.authRepository
     val factory = LoginViewModelFactory(authRepository)
+
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
         startDestination = Routes.LOGIN
     ) {
+
+        /* --------------------------
+            LOGIN
+        --------------------------- */
         composable(Routes.LOGIN) {
+
             val viewModel: LoginViewModel = viewModel(factory = factory)
+
             LoginScreen(
                 viewModel = viewModel,
                 onNavigateToWelcome = {
-                    val userJson = Gson().toJson(it)
-                    navController.navigate(Routes.welcome(userJson))
+                    val json = Gson().toJson(it)
+                    navController.navigate(Routes.welcome(json))
                 }
             )
         }
+
+        /* --------------------------
+            WELCOME SCREEN
+        --------------------------- */
         composable(
             route = Routes.WELCOME,
             arguments = listOf(navArgument("userJson") { type = NavType.StringType })
         ) { backStackEntry ->
+
             val userJson = backStackEntry.arguments?.getString("userJson")
-            val userResponse = Gson().fromJson(userJson, UserResponse::class.java)
-            if (userResponse != null) {
-                WelcomeScreen(user = userResponse, navController = navController)
+            val user = Gson().fromJson(userJson, UserResponse::class.java)
+
+            if (user != null) {
+                // Crear MutableState para permitir actualizaciones
+                val userState = remember { mutableStateOf(user) }
+                WelcomeScreen(user = userState, navController = navController)
             } else {
-                Text("Error al cargar los datos del usuario.")
+                Text("Error al cargar datos del usuario")
             }
+        }
+
+        /* --------------------------
+            ACTIVIDADES (vacía por ahora)
+        --------------------------- */
+        composable("actividades") {
+            Text(
+                "Pantalla de Actividades",
+                modifier = Modifier.padding(20.dp)
+            )
+        }
+
+        /* --------------------------
+            HISTORIAL ACADÉMICO
+        --------------------------- */
+        composable("historial") {
+            HistorialScreen(navController)
+        }
+
+        /* --------------------------
+            DETALLE DE CUATRIMESTRE
+        --------------------------- */
+        composable(
+            "cuatrimestre/{num}",
+            arguments = listOf(navArgument("num") { type = NavType.IntType })
+        ) { backStack ->
+
+            val num = backStack.arguments?.getInt("num") ?: 1
+            DetalleCuatrimestreScreen(navController, num)
+        }
+
+        /* --------------------------
+            PAGOS
+        --------------------------- */
+        composable("pagos") {
+            PagosScreen(navController)
         }
     }
 }
 
-/**
- * Composable que representa la pantalla de inicio de sesión.
- *
- * @param viewModel El ViewModel que gestiona el estado y la lógica de esta pantalla.
- * @param onNavigateToWelcome Callback que se invoca para navegar a la pantalla de bienvenida
- * tras un inicio de sesión exitoso.
- */
+/* ============================================================
+                     LOGIN SCREEN (ya funcionando)
+   ============================================================ */
+
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
@@ -134,15 +148,13 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Efecto para navegar cuando el login es exitoso.
     LaunchedEffect(uiState.loginSuccess) {
         if (uiState.loginSuccess && uiState.user != null) {
-            Toast.makeText(context, "¡Login exitoso! Usuario: ${uiState.user?.personFullName}", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Bienvenido ${uiState.user!!.personFullName}", Toast.LENGTH_LONG).show()
             onNavigateToWelcome(uiState.user!!)
         }
     }
 
-    // Efecto para mostrar mensajes de error.
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -152,60 +164,71 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
         Text(
-            text = "Inicio de Sesión",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 32.dp)
+            text = "Inicia sesión",
+            style = MaterialTheme.typography.headlineSmall,
+            color = Color.Black
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Text(
-            text = "Ingresa tu Matricula Institucional",
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(bottom = 32.dp)
+            text = "Ingresa tu Matrícula Institucional",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = uiState.username,
             onValueChange = viewModel::onUsernameChange,
-            label = { Text("Usuario") },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            placeholder = { Text("Matrícula") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Contraseña") },
+            placeholder = { Text("Contraseña") },
             visualTransformation = PasswordVisualTransformation(),
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
         )
 
+        Spacer(modifier = Modifier.height(24.dp))
+
         if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(bottom = 16.dp))
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+        Button(
+            onClick = viewModel::login,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
         ) {
-            Button(
-                onClick = viewModel::clearFields, enabled = !uiState.isLoading,colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White
-                )
-            ) {
-                Text("Limpiar")
-            }
-
-            Button(
-                onClick = viewModel::login, enabled = !uiState.isLoading, colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White
-                )
-            ) {
-                Text("Continuar")
-            }
+            Text("Continuar", color = Color.White)
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "¿Olvidaste tu contraseña?",
+            color = Color.Gray,
+            modifier = Modifier.clickable { }
+        )
     }
 }

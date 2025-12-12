@@ -4,10 +4,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,37 +17,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import com.example.sigo01.R
 import com.example.sigo01.data.model.UserResponse
+import kotlinx.coroutines.launch
 
 /* -------------------------------------------------------------
-    PANTALLA DE PERFIL (WELCOME SCREEN)
+   WELCOME SCREEN
 --------------------------------------------------------------*/
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WelcomeScreen(
-    user: UserResponse,
+    user: MutableState<UserResponse>,
     navController: NavController
 ) {
-    var nombre by remember { mutableStateOf(user.personFullName) }
-    var correo by remember { mutableStateOf(user.email) }
-    var telefono by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf(user.password) }
+    var nombre by remember { mutableStateOf(user.value.personFullName ?: "") }
+    var correo by remember { mutableStateOf(user.value.email ?: "") }
+    var username by remember { mutableStateOf(user.value.username ?: "") }
+    var password by remember { mutableStateOf(user.value.password ?: "") }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = { TopBarPerfil(navController) },
-        bottomBar = { BottomNavBar(navController) }
-    ) { paddingValues ->
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(padding)
                 .background(Color(0xFFF5F5F5))
+                .verticalScroll(rememberScrollState())
         ) {
 
             Card(
@@ -55,6 +65,7 @@ fun WelcomeScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(16.dp)
             ) {
+
                 Column(modifier = Modifier.padding(20.dp)) {
 
                     Text(
@@ -85,9 +96,9 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
-                        value = telefono,
-                        onValueChange = { telefono = it },
-                        label = { Text("Número de teléfono") },
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Nombre de usuario") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -100,14 +111,123 @@ fun WelcomeScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.profileName ?: "",
+                        onValueChange = {},
+                        label = { Text("Perfil") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.personId.toString(),
+                        onValueChange = {},
+                        label = { Text("ID de persona") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.roles.joinToString(", "),
+                        onValueChange = {},
+                        label = { Text("Roles") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.id.toString(),
+                        onValueChange = {},
+                        label = { Text("ID") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.register ?: "",
+                        onValueChange = {},
+                        label = { Text("Registro") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.registerUser ?: "",
+                        onValueChange = {},
+                        label = { Text("Usuario de registro") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.active.toString(),
+                        onValueChange = {},
+                        label = { Text("Activo") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.termsConditions.toString(),
+                        onValueChange = {},
+                        label = { Text("Términos y condiciones") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.messageControl ?: "",
+                        onValueChange = {},
+                        label = { Text("Control de mensaje") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.value.accessModule ?: "",
+                        onValueChange = {},
+                        label = { Text("Módulo de acceso") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
                         onClick = {
-                            println("Nuevo nombre: $nombre")
-                            println("Nuevo correo: $correo")
-                            println("Nuevo teléfono: $telefono")
-                            println("Nueva contraseña: $password")
+                            user.value = user.value.copy(
+                                personFullName = nombre,
+                                email = correo,
+                                username = username,
+                                password = password
+                            )
+
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Guardado exitosamente",
+                                    withDismissAction = true
+                                )
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007F3F)),
                         modifier = Modifier
@@ -124,11 +244,14 @@ fun WelcomeScreen(
 }
 
 /* -------------------------------------------------------------
-    TOP BAR DE PERFIL
+    TOP BAR + MENÚ DE 3 PUNTITOS
 --------------------------------------------------------------*/
-
 @Composable
 fun TopBarPerfil(navController: NavController) {
+
+    var menuExpanded by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -165,166 +288,285 @@ fun TopBarPerfil(navController: NavController) {
                 contentDescription = "",
                 modifier = Modifier.size(40.dp)
             )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = "Menú",
+                    tint = Color.White
+                )
+            }
+
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+
+                // ⭐ QUE EL MENÚ SALGA DEL OTRO LADO ⭐
+                offset = DpOffset(x = 180.dp, y = 10.dp)
+            ) {
+
+                DropdownMenuItem(
+                    text = { Text("Historial académico") },
+                    onClick = {
+                        menuExpanded = false
+                        navController.navigate("historial")
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Pagos") },
+                    onClick = {
+                        menuExpanded = false
+                        navController.navigate("pagos")
+                    }
+                )
+
+                Divider()
+
+                DropdownMenuItem(
+                    text = { Text("Cerrar sesión", color = Color.Red) },
+                    onClick = {
+                        menuExpanded = false
+                        showLogoutDialog = true
+                    }
+                )
+            }
         }
     }
-}
 
-/* -------------------------------------------------------------
-    BOTTOM NAV BAR
---------------------------------------------------------------*/
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Cerrar sesión") },
+            text = { Text("¿Estás seguro que deseas cerrar sesión?") },
 
-@Composable
-fun BottomNavBar(navController: NavController) {
-    NavigationBar(containerColor = Color.White) {
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        navController.navigate("login") {
+                            popUpTo(0)
+                            launchSingleTop = true
+                        }
+                    }
+                ) {
+                    Text("Sí", color = Color.Red)
+                }
+            },
 
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("home") },
-            icon = { Icon(painterResource(R.drawable.icon_home), contentDescription = "") }
-        )
-
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("perfil") },
-            icon = { Icon(painterResource(R.drawable.icn_usuario), contentDescription = "") }
-        )
-
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("actividades") },
-            icon = { Icon(painterResource(R.drawable.icon_calendario), contentDescription = "") }
-        )
-
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("pagos") },
-            icon = { Icon(painterResource(R.drawable.icon_pagos), contentDescription = "") }
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
         )
     }
 }
 
+
 /* -------------------------------------------------------------
-    PANTALLA: ACTIVIDADES
+   HISTORIAL ACADÉMICO
 --------------------------------------------------------------*/
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActividadesScreen(navController: NavController) {
+fun HistorialScreen(navController: NavController) {
+
+    val lista = listOf(
+        "4to Cuatrimestre",
+        "3er Cuatrimestre",
+        "2do Cuatrimestre",
+        "1er Cuatrimestre"
+    )
 
     Scaffold(
-        topBar = { TopBarActividades() },
-        bottomBar = { BottomNavBar(navController) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Historial Académico") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "")
+                    }
+                }
+            )
+        }
     ) { padding ->
 
         Column(
-            modifier = Modifier.padding(padding)
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
         ) {
 
-            TabsActividades()
+            Text("Cuatrimestres", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-            ContentActividades()
+            Spacer(Modifier.height(16.dp))
+
+            lista.forEachIndexed { index, item ->
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .clickable {
+                            navController.navigate("cuatrimestre/${index + 1}")
+                        },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(item, fontSize = 16.sp)
+                        Icon(Icons.Default.MoreVert, contentDescription = "")
+                    }
+                }
+            }
         }
     }
 }
 
 /* -------------------------------------------------------------
-    TOP BAR DE ACTIVIDADES
+   DETALLE DEL CUATRIMESTRE
 --------------------------------------------------------------*/
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarActividades() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF007F3F))
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Actividades",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.CenterStart)
-        )
-    }
-}
+fun DetalleCuatrimestreScreen(
+    navController: NavController,
+    numero: Int
+) {
 
-/* -------------------------------------------------------------
-    TABS (Actividades / Cursos / Eventos)
---------------------------------------------------------------*/
-
-@Composable
-fun TabsActividades() {
-    var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Actividades", "Cursos", "Eventos")
-
-    TabRow(selectedTabIndex = selectedTab) {
-        tabs.forEachIndexed { index, text ->
-            Tab(
-                selected = selectedTab == index,
-                onClick = { selectedTab = index },
-                text = { Text(text) }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("${numero}° Cuatrimestre") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "")
+                    }
+                }
             )
+        }
+    ) { padding ->
+
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+
+                Column(Modifier.padding(16.dp)) {
+
+                    Text(
+                        "Inglés II",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = "9.8",
+                        onValueChange = {},
+                        label = { Text("Calificación") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = "Aprobado",
+                        onValueChange = {},
+                        label = { Text("Estatus") },
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }
 
 /* -------------------------------------------------------------
-    CONTENIDO DE ACTIVIDADES (Imágenes)
+   PANTALLA DE PAGOS
 --------------------------------------------------------------*/
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentActividades() {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp)
-    ) {
+fun PagosScreen(navController: NavController) {
 
-        item {
-            ImagenActividad(
-                titulo = "Programación de Videojuegos",
-                descripcion = "Curso introductorio...",
-                imagen = R.drawable.curso1
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Pagos") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "")
+                    }
+                }
             )
         }
+    ) { padding ->
 
-        item {
-            ImagenActividad(
-                titulo = "Programación de Apps",
-                descripcion = "Aprende a crear apps...",
-                imagen = R.drawable.curso2
-            )
-        }
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+        ) {
 
-        item {
-            ImagenActividad(
-                titulo = "Talleres y Eventos",
-                descripcion = "Eventos próximos...",
-                imagen = R.drawable.evento1
-            )
+            Text("Nombre del alumno", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("C.U.: 21845678", color = Color.Gray)
+
+            Spacer(Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Enero 2025")
+                    Text("Estado: Pagado", color = Color(0xFF007F3F))
+                }
+            }
         }
     }
 }
 
 /* -------------------------------------------------------------
-    TARJETA DE ACTIVIDAD
+   NAVEGACIÓN COMPLETA
 --------------------------------------------------------------*/
 
 @Composable
-fun ImagenActividad(titulo: String, descripcion: String, imagen: Int) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Column {
-            Image(
-                painter = painterResource(imagen),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(titulo, fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
-            Text(descripcion, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+fun AppNavigation(navController: NavHostController, user: UserResponse) {
+    val userState = remember { mutableStateOf(user) }
+
+    NavHost(navController, startDestination = "welcome") {
+
+        composable("welcome") { WelcomeScreen(userState, navController) }
+
+        composable("historial") { HistorialScreen(navController) }
+
+        composable("cuatrimestre/{num}") { backStack ->
+            val num = backStack.arguments?.getString("num")?.toInt() ?: 1
+            DetalleCuatrimestreScreen(navController, num)
+        }
+
+        composable("pagos") { PagosScreen(navController) }
+
+        composable("login") {
+            Text("Pantalla Login (placeholder)")
         }
     }
 }
