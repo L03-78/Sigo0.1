@@ -1,4 +1,4 @@
-package com.example.sigo01.ui.theme
+package com.example.loginsigo.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

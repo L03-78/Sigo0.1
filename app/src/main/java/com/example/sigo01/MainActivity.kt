@@ -1,266 +1,211 @@
 package com.example.sigo01
 
+
+
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
-import com.example.sigo01.data.database.AppDatabase
-import com.example.sigo01.data.repository.AlumnoRepository
-import com.example.sigo01.data.entity.Alumno
-import com.example.sigo01.data.entity.Cuatrimestre
-import com.example.sigo01.data.entity.Materia
-import com.example.sigo01.viewmodel.LoginViewModel
-import com.example.sigo01.viewmodel.PerfilViewModel
-import com.example.sigo01.viewmodel.HistorialViewModel
-import com.example.sigo01.viewmodel.CuatrimestreViewModel
-import com.example.sigo01.screen.HomeScreen
-import com.example.sigo01.screen.LoginScreen
-import com.example.sigo01.screen.PerfilScreen
-import com.example.sigo01.screen.RecuperarScreen
-import com.example.sigo01.perfil.CambiarContraseñaDialog
-import com.example.sigo01.perfil.CuatrimestreDetalleScreen
-import com.example.sigo01.perfil.HistorialAcademicoScreen
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import androidx.navigation.navArgument
+import com.example.sigo01.data.model.UserResponse
+import com.example.sigo01.di.LoginViewModelFactory
+import com.example.sigo01.ui.login.LoginViewModel
+import com.example.sigo01.ui.login.WelcomeScreen
+import com.google.gson.Gson
 
+/**
+ * Define las rutas de navegación de la aplicación.
+ */
+object Routes {
+    const val LOGIN = "login_screen"
+    const val WELCOME = "welcome_screen/{userJson}" // Argumento para pasar el JSON
+
+    /**
+     * Construye la ruta para la pantalla de bienvenida con el JSON del usuario.
+     * @param userJson El objeto [UserResponse] serializado como una cadena JSON.
+     * @return La ruta completa para navegar a la pantalla de bienvenida.
+     */
+    fun welcome(userJson: String): String {
+        return "welcome_screen/$userJson"
+    }
+}
+
+/**
+ * Actividad principal de la aplicación.
+ */
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // BASE DE DATOS
-        val db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "sigo01_database"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
-
-        val alumnoDao = db.alumnoDao()
-        val cuatriDao = db.cuatrimestreDao()
-        val materiaDao = db.materiaDao()
-
-        val alumnoRepo = AlumnoRepository(alumnoDao)
-
-        lifecycleScope.launch(Dispatchers.IO) {
-
-            val existe = alumnoRepo.getAlumno("utm241037ti")
-
-            if (existe == null) {
-                alumnoRepo.insertAlumno(
-                    Alumno(
-                        matricula = "utm241037ti",
-                        password = "Lucia09",
-                        nombre = "Lucia",
-                        apellido1 = "Molinero",
-                        apellido2 = "Garcia",
-                        correoInstitucional = "Lucia@sigo.com",
-                        correoPersonal = "luciamolinero@gmail.com",
-                        telefono = "447826643",
-                        sexo = "F",
-                        fechaNacimiento = "08/02/2006",
-                        nss = "12345678901",
-                        carrera = "Tecnologias de la informacion",
-                        grupo = "4b",
-                        tutor = "Dra. Gricelda Rodriguez Robledo"
-                    )
-                )
-            }
-        }
-
-        // INSERTAR CUATRIMESTRES SOLO SI NUNCA SE HAN INSERTADO
-        lifecycleScope.launch(Dispatchers.IO) {
-
-            val existentes = cuatriDao.countByMatricula("utm241037ti")
-
-            if (existentes == 0) {
-
-                cuatriDao.insert(
-                    Cuatrimestre(
-                        matriculaAlumno = "utm241037ti",
-                        nombre = "1er Cuatrimestre",
-                        fechaInicio = "09/09/2024",
-                        fechaFin = "20/12/2024",
-                        promedio = 9.5,
-                        carrera = "Tecnologias de la informacion",
-                        grupo = "1B Matutino",
-                        tutor = "M.G.T.I Gerardo Chavez Hernandez",
-                        desempeno = "ESTRATEGICO",
-                        progreso = 100
-                    )
-                )
-
-                cuatriDao.insert(
-                    Cuatrimestre(
-                        matriculaAlumno = "utm241037ti",
-                        nombre = "2do Cuatrimestre",
-                        fechaInicio = "13/01/2025",
-                        fechaFin = "30/04/2025",
-                        promedio = 9.5,
-                        carrera = "Tecnologias de la informacion",
-                        grupo = "2B Matutino",
-                        tutor = "Dra. Olga Leticia Robles Garcia",
-                        desempeno = "ESTRATEGICO",
-                        progreso = 100
-                    )
-                )
-
-                cuatriDao.insert(
-                    Cuatrimestre(
-                        matriculaAlumno = "utm241037ti",
-                        nombre = "3er Cuatrimestre",
-                        fechaInicio = "06/05/2025",
-                        fechaFin = "29/08/2025",
-                        promedio = 9.2,
-                        carrera = "Tecnologias de la informacion",
-                        grupo = "3B Matutino",
-                        tutor = "M.G.T.I Omar Ordoñez Toledo",
-                        desempeno = "AUTONOMO",
-                        progreso = 100
-                    )
-                )
-
-                cuatriDao.insert(
-                    Cuatrimestre(
-                        matriculaAlumno = "utm241037ti",
-                        nombre = "4to Cuatrimestre",
-                        fechaInicio = "08/09/2025",
-                        fechaFin = "19/12/2025",
-                        promedio = 8.0,
-                        carrera = "Tecnologias de la informacion",
-                        grupo = "4B Matutino",
-                        tutor = "Dra. Gricelda Rodriguez Robledo",
-                        desempeno = "POR CAPTURAR",
-                        progreso = 49
-                    )
-                )
-            }
-        }
-        // DESPUÉS de insertar cuatrimestres
-        lifecycleScope.launch(Dispatchers.IO) {
-
-            val existentesMaterias = materiaDao.countMaterias()
-
-            if (existentesMaterias == 0) {
-
-                materiaDao.insertarMateria(
-                    Materia(
-                        nombre = "Matemáticas",
-                        profesor = "Ing. López",
-                        cuatrimestreId = 1
-                    )
-                )
-
-                materiaDao.insertarMateria(
-                    Materia(
-                        nombre = "Programación",
-                        profesor = "Ing. Torres",
-                        cuatrimestreId = 1
-                    )
-                )
-
-                materiaDao.insertarMateria(
-                    Materia(
-                        nombre = "Bases de Datos",
-                        profesor = "Lic. Pérez",
-                        cuatrimestreId = 2
-                    )
-                )
-
-                materiaDao.insertarMateria(
-                    Materia(
-                        nombre = "Desarrollo Móvil",
-                        profesor = "Mtro. Hernández",
-                        cuatrimestreId = 3
-                    )
-                )
-            }
-        }
-
-        val loginVM = LoginViewModel(alumnoRepo)
-        val perfilVM = PerfilViewModel(alumnoRepo)
-        val historialVM = HistorialViewModel(cuatriDao)
-        val cuatriVM = CuatrimestreViewModel(materiaDao)
-
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-
-                    val nav = rememberNavController()
-
-                    NavHost(navController = nav, startDestination = "login") {
-
-                        composable("login") {
-                            LoginScreen(
-                                viewModel = loginVM,
-                                onLoginClick = { nav.navigate("home") },
-                                onForgotClick = { nav.navigate("recuperar") }
-                            )
-
-
-                    }
-
-                        composable("home") {
-                            HomeScreen(
-                                onOpenPerfil = { nav.navigate("perfil") },
-                                onOpenHistorial = { nav.navigate("historial") }
-                            )
-                        }
-
-                        composable("perfil") {
-                            PerfilScreen(
-                                viewModel = perfilVM,
-                                onBack = { nav.popBackStack() },
-                                onAbrirCambiarContrasena = { nav.navigate("cambiar_contrasena") }
-                            )
-                        }
-
-                        composable("historial") {
-                            HistorialAcademicoScreen(
-                                viewModel = historialVM,
-                                onBack = { nav.popBackStack() },
-                                onOpenCuatrimestre = { id ->
-                                    nav.navigate("detalle/$id")
-                                }
-                            )
-                        }
-
-                        composable("detalle/{id}") { back ->
-                            val id = back.arguments?.getString("id")!!.toInt()
-                            CuatrimestreDetalleScreen(
-                                tituloCuatri = "Cuatrimestre",
-                                cuatriId = id,
-                                viewModel = cuatriVM,
-                                onBack = { nav.popBackStack() }
-                            )
-                        }
-
-                        composable("recuperar") {
-                            RecuperarScreen(
-                                onBackClick = { nav.popBackStack() },
-                                onRecoverClick = { nav.popBackStack() }
-                            )
-                        }
-
-                        composable("cambiar_contrasena") {
-                            CambiarContraseñaDialog(
-                                onCancel = { nav.popBackStack() },
-                                onAceptar = { nav.popBackStack() }
-                            )
-                        }
-
-                    }
-                }
+                AppScreenEntry()
             }
         }
+    }
+}
+
+/**
+ * Punto de entrada de la UI de la aplicación.
+ *
+ * Configura el [NavHost] y la inyección de dependencias para los ViewModels.
+ */
+@Composable
+fun AppScreenEntry() {
+    val appContext = LocalContext.current.applicationContext
+    val application = appContext as SigoLoginApplication
+    val authRepository = application.container.authRepository
+    val factory = LoginViewModelFactory(authRepository)
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = Routes.LOGIN
+    ) {
+        composable(Routes.LOGIN) {
+            val viewModel: LoginViewModel = viewModel(factory = factory)
+            LoginScreen(
+                viewModel = viewModel,
+                onNavigateToWelcome = {
+                    val userJson = Gson().toJson(it)
+                    navController.navigate(Routes.welcome(userJson))
+                }
+            )
+        }
+        composable(
+            route = Routes.WELCOME,
+            arguments = listOf(navArgument("userJson") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userJson = backStackEntry.arguments?.getString("userJson")
+            val userResponse = Gson().fromJson(userJson, UserResponse::class.java)
+            if (userResponse != null) {
+                WelcomeScreen(user = userResponse, navController = navController)
+            } else {
+                Text("Error al cargar los datos del usuario.")
+            }
+        }
+    }
+}
+
+/**
+ * Composable que representa la pantalla de inicio de sesión.
+ *
+ * @param viewModel El ViewModel que gestiona el estado y la lógica de esta pantalla.
+ * @param onNavigateToWelcome Callback que se invoca para navegar a la pantalla de bienvenida
+ * tras un inicio de sesión exitoso.
+ */
+@Composable
+fun LoginScreen(
+    viewModel: LoginViewModel,
+    onNavigateToWelcome: (UserResponse) -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Efecto para navegar cuando el login es exitoso.
+    LaunchedEffect(uiState.loginSuccess) {
+        if (uiState.loginSuccess && uiState.user != null) {
+            Toast.makeText(context, "¡Login exitoso! Usuario: ${uiState.user?.personFullName}", Toast.LENGTH_LONG).show()
+            onNavigateToWelcome(uiState.user!!)
+        }
+    }
+
+    // Efecto para mostrar mensajes de error.
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Inicio de Sesión",
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+        Text(
+            text = "Ingresa tu Matricula Institucional",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        OutlinedTextField(
+            value = uiState.username,
+            onValueChange = viewModel::onUsernameChange,
+            label = { Text("Usuario") },
+            enabled = !uiState.isLoading,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        )
+
+        OutlinedTextField(
+            value = uiState.password,
+            onValueChange = viewModel::onPasswordChange,
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            enabled = !uiState.isLoading,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+        )
+
+        if (uiState.isLoading) {
+            CircularProgressIndicator(modifier = Modifier.padding(bottom = 16.dp))
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(
+                onClick = viewModel::clearFields, enabled = !uiState.isLoading,colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White
+                )
+            ) {
+                Text("Limpiar")
+            }
+
+            Button(
+                onClick = viewModel::login, enabled = !uiState.isLoading, colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White
+                )
+            ) {
+                Text("Continuar")
+            }
+        }
+
     }
 }

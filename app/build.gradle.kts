@@ -69,4 +69,21 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Conversor Gson para Retrofit
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Logging para ver las peticiones/respuestas (opcional pero muy útil)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // ViewModel - Compose Integration
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.5")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
+    // DataStore (Preferences DataStore)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
