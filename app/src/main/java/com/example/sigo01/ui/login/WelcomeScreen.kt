@@ -28,9 +28,7 @@ import com.example.sigo01.R
 import com.example.sigo01.data.model.UserResponse
 import kotlinx.coroutines.launch
 
-/* -------------------------------------------------------------
-   WELCOME SCREEN
---------------------------------------------------------------*/
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WelcomeScreen(
@@ -243,9 +241,6 @@ fun WelcomeScreen(
     }
 }
 
-/* -------------------------------------------------------------
-    TOP BAR + MENÚ DE 3 PUNTITOS
---------------------------------------------------------------*/
 @Composable
 fun TopBarPerfil(navController: NavController) {
 
@@ -366,9 +361,7 @@ fun TopBarPerfil(navController: NavController) {
 }
 
 
-/* -------------------------------------------------------------
-   HISTORIAL ACADÉMICO
---------------------------------------------------------------*/
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -431,9 +424,6 @@ fun HistorialScreen(navController: NavController) {
     }
 }
 
-/* -------------------------------------------------------------
-   DETALLE DEL CUATRIMESTRE
---------------------------------------------------------------*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -499,9 +489,7 @@ fun DetalleCuatrimestreScreen(
     }
 }
 
-/* -------------------------------------------------------------
-   PANTALLA DE PAGOS
---------------------------------------------------------------*/
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -544,9 +532,7 @@ fun PagosScreen(navController: NavController) {
     }
 }
 
-/* -------------------------------------------------------------
-   NAVEGACIÓN COMPLETA
---------------------------------------------------------------*/
+
 
 @Composable
 fun AppNavigation(navController: NavHostController, user: UserResponse) {

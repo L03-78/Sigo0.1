@@ -54,9 +54,6 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.navigation.compose)
 
-    // ------------------------------
-    // ROOM (COMPLETO Y CORRECTO)
-    // ------------------------------
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation(libs.androidx.compose.animation.core.lint)

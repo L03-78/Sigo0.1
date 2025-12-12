@@ -62,9 +62,7 @@ fun AppScreenEntry() {
         startDestination = Routes.LOGIN
     ) {
 
-        /* --------------------------
-            LOGIN
-        --------------------------- */
+
         composable(Routes.LOGIN) {
 
             val viewModel: LoginViewModel = viewModel(factory = factory)
@@ -78,9 +76,7 @@ fun AppScreenEntry() {
             )
         }
 
-        /* --------------------------
-            WELCOME SCREEN
-        --------------------------- */
+
         composable(
             route = Routes.WELCOME,
             arguments = listOf(navArgument("userJson") { type = NavType.StringType })
@@ -90,7 +86,7 @@ fun AppScreenEntry() {
             val user = Gson().fromJson(userJson, UserResponse::class.java)
 
             if (user != null) {
-                // Crear MutableState para permitir actualizaciones
+
                 val userState = remember { mutableStateOf(user) }
                 WelcomeScreen(user = userState, navController = navController)
             } else {
@@ -98,9 +94,6 @@ fun AppScreenEntry() {
             }
         }
 
-        /* --------------------------
-            ACTIVIDADES (vacía por ahora)
-        --------------------------- */
         composable("actividades") {
             Text(
                 "Pantalla de Actividades",
@@ -108,16 +101,10 @@ fun AppScreenEntry() {
             )
         }
 
-        /* --------------------------
-            HISTORIAL ACADÉMICO
-        --------------------------- */
         composable("historial") {
             HistorialScreen(navController)
         }
 
-        /* --------------------------
-            DETALLE DE CUATRIMESTRE
-        --------------------------- */
         composable(
             "cuatrimestre/{num}",
             arguments = listOf(navArgument("num") { type = NavType.IntType })
@@ -127,18 +114,13 @@ fun AppScreenEntry() {
             DetalleCuatrimestreScreen(navController, num)
         }
 
-        /* --------------------------
-            PAGOS
-        --------------------------- */
+
         composable("pagos") {
             PagosScreen(navController)
         }
     }
 }
 
-/* ============================================================
-                     LOGIN SCREEN (ya funcionando)
-   ============================================================ */
 
 @Composable
 fun LoginScreen(
